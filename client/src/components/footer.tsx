@@ -80,7 +80,7 @@ export default function FooterSection() {
                 <span className="text-muted-foreground block text-center text-sm"> © {new Date().getFullYear()} Tailus UI, All rights reserved</span>
             </div>
             <p className="text-center text-3xl md:text-5xl lg:text-[12rem] font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-950  to-neutral-800 inset-x-0 mt-20 pb-10 ">
-        ConnectX
+        UrbanEYE
       </p>
         </footer>
     )

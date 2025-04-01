@@ -6,12 +6,14 @@ import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { User } from "lucide-react"
 
+type UserRole = "" | "citizen" | "admin"
+
 type Props = {
-  value: string
+  value: UserRole
   title: string
   text: string
-  userType: string
-  setUserType: React.Dispatch<React.SetStateAction<string>>
+  userType: UserRole
+  setUserType: React.Dispatch<React.SetStateAction<UserRole>>
 }
 
 const UserTypeCard = ({ value, title, text, userType, setUserType }: Props) => {

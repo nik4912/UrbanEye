@@ -3,9 +3,6 @@ import {
   GalleryVerticalEnd,
   SquareTerminal,
   Settings2,
-  NotebookIcon,
-  User2Icon,
-  MessageSquare,
   Edit3,
   CheckSquare,
 } from "lucide-react"
@@ -36,27 +33,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Dashboard",
       url: "/dashboard",
       icon: SquareTerminal,
-    },
-    {
-      title: "Announcements",
-      url: "/announcements",
-      icon: NotebookIcon,
-    },
-    {
-      title: "Tasks",
-      url: "/tasks",
-      icon: CheckSquare,
-    },
-    {
-      title: "Chat",
-      url: "/chat",
-      icon: MessageSquare,
-    },  
-    {
-      title: "Profile",
-      url: "/profile",
-      icon: User2Icon,
-    },
+    }, 
     {
       title: "Settings",
       url: "/settings",
@@ -87,7 +64,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     teams: [
       {
-        name: "ConnectX",
+        name: "UrbanEYE",
         logo: GalleryVerticalEnd,
         plan: "Made by TOPGs",
       },

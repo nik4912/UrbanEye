@@ -54,7 +54,7 @@ export default function Settings() {
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink href="/dashboard">
-                    ConnectX
+                    UrbanEYE
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
@@ -234,14 +234,14 @@ export default function Settings() {
                 <CardHeader>
                   <CardTitle>Theme Preferences</CardTitle>
                   <CardDescription>
-                    Customize how ConnectX looks for you.
+                    Customize how UrbanEYE looks for you.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                 <div className="space-y-4">
   <div className="space-y-2">
     <Label>Theme</Label>
-    <p className="text-xs text-muted-foreground">Select how ConnectX appears to you</p>
+    <p className="text-xs text-muted-foreground">Select how UrbanEYE appears to you</p>
   </div>
   <div className="grid grid-cols-3 gap-4">
   <div 

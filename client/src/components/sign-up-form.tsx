@@ -10,16 +10,6 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -31,34 +21,24 @@ interface SignUpFormProps {
 }
 
 const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
+  // step 1: choose user type, step 2: fill details, step 3: OTP verification
   const [step, setStep] = useState<number>(1);
-  const [role, setRole] = useState<string>("");
-  const [value, setValue] = useState<string>(""); // OTP value state
+  // role now becomes either "citizen" for a regular user or "admin" for an admin account.
+  const [role, setRole] = useState<"citizen" | "admin" | "">("");
+  const [value, setValue] = useState<string>(""); // OTP value
 
-  // States for student sign-up
-  const [studentYear, setStudentYear] = useState<
-    "first" | "second" | "third" | "fourth" | ""
-  >("");
-  const [studentDivision, setStudentDivision] = useState<string>("");
-
-  const yearOptions: Record<"first" | "second" | "third" | "fourth", string> = {
-    first: "First Year",
-    second: "Second Year",
-    third: "Third Year",
-    fourth: "Fourth Year",
-  };
-
-  const [studentData, setStudentData] = useState({
-    name: "",
-    studentId: "",
+  // State for citizen form (UserSchema)
+  const [userData, setUserData] = useState({
+    fullName: "",
     email: "",
     password: "",
   });
 
-  const [teacherData, setTeacherData] = useState({
-    name: "",
-    department: "",
-    teacherId: "",
+  // State for admin form (AdminSchema)
+  const [adminData, setAdminData] = useState({
+    fullName: "",
+    email: "",
+    clerkUserId: "",
     password: "",
   });
 
@@ -72,30 +52,29 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (role === "student") {
-      setStudentData({
-        ...studentData,
+    if (role === "citizen") {
+      setUserData({
+        ...userData,
         [name]: value,
       });
-    } else if (role === "teacher") {
-      setTeacherData({
-        ...teacherData,
+    } else if (role === "admin") {
+      setAdminData({
+        ...adminData,
         [name]: value,
       });
     }
   };
 
   // Registers the user via Clerk API and sends an OTP email.
-  // API calls have been removed from here.
   const handleRegistration = async () => {
     if (!signUp) {
       console.error("SignUp resource is not ready");
       return;
     }
     const emailToRegister =
-      role === "student" ? studentData.email : teacherData.teacherId;
+      role === "citizen" ? userData.email : adminData.email;
     const passwordToRegister =
-      role === "student" ? studentData.password : teacherData.password;
+      role === "citizen" ? userData.password : adminData.password;
     setStep(3);
     try {
       await signUp.create({
@@ -105,7 +84,6 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
     } catch (error) {
       console.error("Sign up error", error);
-      alert("There was an error during sign up. Please try again.");
     }
   };
 
@@ -124,22 +102,19 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
         await clerk.setActive({ session: completeSignUp.createdSessionId });
         // Get the Clerk user id from the sign-up response
         const clerkUserId = completeSignUp.createdUserId;
-        // Omit the password field from the payload using destructuring
-        if (role === "teacher") {
-          const { password, ...teacherPayload } = teacherData;
-          await apiClient.post(SEND_SIGNUP_DATA, { 
-            ...teacherPayload, 
-            role,
-            clerkUserId // sending Clerk id to backend
-          });
-        } else if (role === "student") {
-          const { password, ...studentPayload } = studentData;
+        if (role === "admin") {
+          const { password, ...adminPayload } = adminData;
           await apiClient.post(SEND_SIGNUP_DATA, {
-            ...studentPayload,
+            ...adminPayload,
             role,
-            year: studentYear,
-            division: studentDivision,
-            clerkUserId // sending Clerk id to backend
+            clerkUserId,
+          });
+        } else if (role === "citizen") {
+          const { password, ...userPayload } = userData;
+          await apiClient.post(SEND_SIGNUP_DATA, {
+            ...userPayload,
+            role,
+            clerkUserId,
           });
         }
         console.log("User signed up:", completeSignUp);
@@ -150,7 +125,6 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
       }
     } catch (error) {
       console.error("OTP verification error", error);
-      alert("There was an error during OTP verification. Please try again.");
     }
   };
 
@@ -166,23 +140,23 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
               Create an account
             </h2>
             <p className="text-iridium md:text-sm">
-              Tell us about yourself! What do you do?
+              Tell us about yourself! What kind of account do you need?
             </p>
           </div>
           <div className="flex flex-col gap-4">
             <UserTypeCard
               setUserType={setRole}
-              title="Student"
-              text="I am a student ready to learn and grow."
+              title="User"
+              text="I want a regular account."
               userType={role}
-              value="student"
+              value="citizen"
             />
             <UserTypeCard
               setUserType={setRole}
-              title="Teacher"
-              text="I am a teacher committed to inspiring minds."
+              title="Admin"
+              text="I need an administrator account."
               userType={role}
-              value="teacher"
+              value="admin"
             />
           </div>
           <Button
@@ -196,108 +170,48 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
         </div>
       )}
 
-      {step === 2 && role === "student" && (
+      {step === 2 && role === "citizen" && (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2 text-start">
             <h2 className="text-start md:text-3xl font-bold">
-              Student Details
+              User Details
             </h2>
             <p className="text-iridium md:text-sm">
-              Provide your student information
+              Provide your details for a regular user account.
             </p>
           </div>
           <div className="grid gap-2 text-start">
-            <Label htmlFor="student-name">Student Name</Label>
+            <Label htmlFor="user-fullName">Full Name</Label>
             <Input
-              id="student-name"
+              id="user-fullName"
               type="text"
-              name="name"
-              placeholder="Student Name"
-              value={studentData.name}
+              name="fullName"
+              placeholder="Your full name"
+              value={userData.fullName}
               onChange={handleChange}
               required
             />
           </div>
           <div className="grid gap-2 text-start">
-            <Label htmlFor="student-year">Current Year</Label>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center justify-between">
-                  {studentYear ? yearOptions[studentYear] : "Select Year"}
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>Current Year</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={studentYear}
-                  onValueChange={(value: string) =>
-                    setStudentYear(value as "" | "first" | "second" | "third" | "fourth")
-                  }
-                >
-                  <DropdownMenuRadioItem value="first">First Year</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="second">Second Year</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="third">Third Year</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="fourth">Fourth Year</DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className="grid gap-2 text-start">
-            <Label htmlFor="student-division">Current Division</Label>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex items-center justify-between">
-                  {studentDivision ? studentDivision : "Select Division"}
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuLabel>Current Division</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={studentDivision}
-                  onValueChange={setStudentDivision}
-                >
-                  <DropdownMenuRadioItem value="A">A</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="B">B</DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className="grid gap-2 text-start">
-            <Label htmlFor="student-id">Student ID</Label>
+            <Label htmlFor="user-email">Email</Label>
             <Input
-              id="student-id"
-              type="text"
-              name="studentId"
-              placeholder="Student ID"
-              value={studentData.studentId}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="grid gap-2 text-start">
-            <Label htmlFor="student-email">Email</Label>
-            <Input
-              id="student-email"
+              id="user-email"
               type="email"
               name="email"
-              placeholder="m@pvppcoe.ac.in"
-              value={studentData.email}
+              placeholder="you@example.com"
+              value={userData.email}
               onChange={handleChange}
               required
             />
           </div>
           <div className="grid gap-2 text-start">
-            <Label htmlFor="student-password">Password</Label>
+            <Label htmlFor="user-password">Password</Label>
             <Input
-              id="student-password"
+              id="user-password"
               type="password"
               name="password"
               placeholder="Password"
-              value={studentData.password}
+              value={userData.password}
               onChange={handleChange}
               required
             />
@@ -313,60 +227,60 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
         </div>
       )}
 
-      {step === 2 && role === "teacher" && (
+      {step === 2 && role === "admin" && (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2 text-start">
             <h2 className="text-start md:text-3xl font-bold">
-              Teacher Details
+              Admin Details
             </h2>
             <p className="text-iridium md:text-sm">
-              Provide your teacher information
+              Provide your details for an admin account.
             </p>
           </div>
           <div className="grid gap-2 text-start">
-            <Label htmlFor="teacher-name">Teacher Name</Label>
+            <Label htmlFor="admin-fullName">Full Name</Label>
             <Input
-              id="teacher-name"
+              id="admin-fullName"
               type="text"
-              name="name"
-              placeholder="Teacher Name"
-              value={teacherData.name}
+              name="fullName"
+              placeholder="Your full name"
+              value={adminData.fullName}
               onChange={handleChange}
               required
             />
           </div>
           <div className="grid gap-2 text-start">
-            <Label htmlFor="department">Department</Label>
+            <Label htmlFor="admin-email">Email</Label>
             <Input
-              id="department"
-              type="text"
-              name="department"
-              placeholder="Department"
-              value={teacherData.department}
+              id="admin-email"
+              type="email"
+              name="email"
+              placeholder="you@example.com"
+              value={adminData.email}
               onChange={handleChange}
               required
             />
           </div>
           <div className="grid gap-2 text-start">
-            <Label htmlFor="teacher-id">Email ID</Label>
+            <Label htmlFor="admin-clerkUserId">Clerk User ID</Label>
             <Input
-              id="teacher-id"
+              id="admin-clerkUserId"
               type="text"
-              name="teacherId"
-              placeholder="Teacher ID"
-              value={teacherData.teacherId}
+              name="clerkUserId"
+              placeholder="Your Clerk User ID"
+              value={adminData.clerkUserId}
               onChange={handleChange}
               required
             />
           </div>
           <div className="grid gap-2 text-start">
-            <Label htmlFor="teacher-password">Password</Label>
+            <Label htmlFor="admin-password">Password</Label>
             <Input
-              id="teacher-password"
+              id="admin-password"
               type="password"
               name="password"
               placeholder="Password"
-              value={teacherData.password}
+              value={adminData.password}
               onChange={handleChange}
               required
             />
