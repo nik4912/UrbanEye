@@ -14,6 +14,7 @@ import useStore from './store/store'
 import { JSX } from 'react'
 import Profile from './pages/Profile/Profile'
 import Complaints from './pages/Complaints/Complaints'
+import CreateComplaints from './pages/CreateComplaints/CreateComplaints'
 
 
 // Ensure to replace or import your apiClient and FETCH_USER_INFO endpoint.
@@ -92,6 +93,7 @@ function App() {
         <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>}/>
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>}/>
         <Route path="/Complaints" element={<PrivateRoute><Complaints /></PrivateRoute>}/>
+        <Route path="/create-complaints" element={<PrivateRoute><CreateComplaints /></PrivateRoute>}/>
         <Route path="/404" element={<Error />} />
         <Route path='*' element={<Navigate to="/404" />} />
       </Routes>

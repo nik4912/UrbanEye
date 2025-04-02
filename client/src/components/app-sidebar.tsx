@@ -22,6 +22,8 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { title } from "process"
+import { url } from "inspector"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useUser()
@@ -35,7 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Dashboard",
       url: "/dashboard",
       icon: SquareTerminal,
-    }, 
+    },
     {
       title: "Settings",
       url: "/settings",
@@ -49,24 +51,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
       title: "Complaints",
       url: "/complaints",
-      icon:  ClipboardList, // Replace with the appropriate icon component
+      icon: ClipboardList, // Replace with the appropriate icon component
     },
+    {
+      title:"Create Complaints",
+      url:"/create-complaints",
+      icon: Edit3,
+    }
   ]
 
   // If the user is a teacher, add teacher-only options.
   const teacherNav = isTeacher
     ? [
-        {
-          title: "Create Announcement",
-          url: "/create-announcement",
-          icon: Edit3,
-        },
-        {
-          title: "Create Tasks",
-          url: "/create-tasks",
-          icon: CheckSquare,
-        },
-      ]
+      {
+        title: "Create Announcement",
+        url: "/create-announcement",
+        icon: Edit3,
+      },
+      {
+        title: "Create Tasks",
+        url: "/create-tasks",
+        icon: CheckSquare,
+      },
+    ]
     : []
 
   const data = {

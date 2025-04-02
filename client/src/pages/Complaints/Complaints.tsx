@@ -66,7 +66,7 @@ function Complaints() {
   
   // State for photo upload and preview
   const [photoPreview, setPhotoPreview] = useState(null)
-  const [selectedFile, setSelectedFile] = useState(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   
   // State for complaints
   const [complaints, setComplaints] = useState([
@@ -121,7 +121,7 @@ function Complaints() {
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false)
   const [previewingComplaint, setPreviewingComplaint] = useState(null)
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status : string) => {
     switch (status) {
       case "open":
         return <Badge className="bg-blue-500">Open</Badge>
@@ -136,7 +136,7 @@ function Complaints() {
     }
   }
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString : string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -145,8 +145,10 @@ function Complaints() {
   }
   
   // Handle photo upload
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+    const file = e.target.files?.[0]
+    if (!file) return
     if (file) {
       setSelectedFile(file)
       
@@ -246,7 +248,7 @@ function Complaints() {
   }
   
   // Handle preview complaint
-  const handlePreview = (complaint) => {
+  const handlePreview = (complaint  ) => {
     setPreviewingComplaint(complaint)
     setIsPreviewDialogOpen(true)
   }
