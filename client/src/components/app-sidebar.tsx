@@ -57,6 +57,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title:"Create Complaints",
       url:"/create-complaints",
       icon: Edit3,
+    },
+    {
+      title:"View Complaints",
+      url:"/view-complaints",
+      icon: Edit3,
     }
   ]
 

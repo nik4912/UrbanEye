@@ -15,6 +15,7 @@ import { JSX } from 'react'
 import Profile from './pages/Profile/Profile'
 import Complaints from './pages/Complaints/Complaints'
 import CreateComplaints from './pages/CreateComplaints/CreateComplaints'
+import ViewComplaints from './pages/ViewComplaints/ViewComplaints'
 
 
 // Ensure to replace or import your apiClient and FETCH_USER_INFO endpoint.
@@ -94,7 +95,8 @@ function App() {
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>}/>
         <Route path="/Complaints" element={<PrivateRoute><Complaints /></PrivateRoute>}/>
         <Route path="/create-complaints" element={<PrivateRoute><CreateComplaints /></PrivateRoute>}/>
-        <Route path="/404" element={<Error />} />
+        <Route path="/view-complaints" element={<PrivateRoute><ViewComplaints /></PrivateRoute>}/>
+        <Route path="/404" element={<Error />} />0
         <Route path='*' element={<Navigate to="/404" />} />
       </Routes>
     </BrowserRouter>
