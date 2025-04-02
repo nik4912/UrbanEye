@@ -6,7 +6,13 @@ import {
   Edit3,
   CheckSquare,
   User2Icon,
-  ClipboardList
+  ClipboardList,
+  View,
+  ViewIcon,
+  EyeIcon,
+  EyeClosedIcon,
+  EyeOffIcon,
+  ScanEye
 } from "lucide-react"
 
 import { useUser } from "@clerk/clerk-react"
@@ -61,7 +67,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
       title:"View Complaints",
       url:"/view-complaints",
-      icon: Edit3,
+      icon : ScanEye,
     }
   ]
 

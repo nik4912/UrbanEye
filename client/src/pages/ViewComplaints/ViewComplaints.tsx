@@ -63,6 +63,7 @@ import {
   AlertCircle,
   Check,
   ChevronDown,
+  ChevronRight,
   Filter,
   Image,
   Loader2,
@@ -70,6 +71,7 @@ import {
   MoreVertical,
   RefreshCcw,
   Search,
+  Sparkles,
   User,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
@@ -121,6 +123,7 @@ const ViewComplaints = () => {
   const [urgencyFilter, setUrgencyFilter] = useState<string>("all");
   const [isImageOpen, setIsImageOpen] = useState<boolean>(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
+  const [showNewComplaints, setShowNewComplaints] = useState<boolean>(false);
 
   // Fetch complaints
   useEffect(() => {
@@ -130,7 +133,7 @@ const ViewComplaints = () => {
   // Filter complaints based on search and filters
   useEffect(() => {
     filterComplaints();
-  }, [complaints, searchQuery, statusFilter, urgencyFilter]);
+  }, [complaints, searchQuery, statusFilter, urgencyFilter, showNewComplaints]);
 
   const fetchComplaints = async () => {
     setLoading(true);
@@ -152,6 +155,11 @@ const ViewComplaints = () => {
   const filterComplaints = () => {
     let filtered = [...complaints];
 
+    // Show only new complaints (pending status) if filter is active
+    if (showNewComplaints) {
+      filtered = filtered.filter(complaint => complaint.status === "pending");
+    }
+    
     // Apply search query filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -183,7 +191,10 @@ const ViewComplaints = () => {
     setIsDetailsOpen(true);
   };
 
-  const openStatusDialog = (complaint: Complaint) => {
+  const openStatusDialog = (complaint: Complaint, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation();
+    }
     setSelectedComplaint(complaint);
     setNewStatus(complaint.status);
     setIsStatusDialogOpen(true);
@@ -236,6 +247,16 @@ const ViewComplaints = () => {
     setIsImageOpen(true);
   };
 
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case "pending": return "Pending";
+      case "in-progress": return "In Progress";
+      case "resolved": return "Resolved";
+      case "rejected": return "Rejected";
+      default: return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -277,6 +298,16 @@ const ViewComplaints = () => {
               />
             </div>
             <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+              <Button 
+                variant={showNewComplaints ? "default" : "outline"}
+                size="sm"
+                className={`gap-2 ${showNewComplaints ? "bg-yellow-500 hover:bg-yellow-600" : ""}`}
+                onClick={() => setShowNewComplaints(!showNewComplaints)}
+              >
+                <Sparkles className="h-4 w-4" />
+                {showNewComplaints ? "Showing New" : "Show New"}
+              </Button>
+            
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[140px]">
                   <div className="flex items-center gap-2">
@@ -337,7 +368,7 @@ const ViewComplaints = () => {
                 </div>
                 <h3 className="text-lg font-medium">No complaints found</h3>
                 <p className="text-muted-foreground text-center max-w-sm mt-1">
-                  {searchQuery || statusFilter !== "all" || urgencyFilter !== "all"
+                  {searchQuery || statusFilter !== "all" || urgencyFilter !== "all" || showNewComplaints
                     ? "Try changing your filters or search query"
                     : "No complaints have been submitted yet"}
                 </p>
@@ -353,23 +384,33 @@ const ViewComplaints = () => {
                     <TableHead className="w-[120px]">Status</TableHead>
                     <TableHead className="w-[120px]">Urgency</TableHead>
                     <TableHead className="w-[180px]">Submitted</TableHead>
-                    <TableHead className="w-[100px] text-right">Actions</TableHead>
+                    <TableHead className="w-[80px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredComplaints.map((complaint) => (
-                    <TableRow key={complaint._id}>
-                      <TableCell className="font-medium">{complaint.type}</TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {complaint.description}
+                    <TableRow 
+                      key={complaint._id}
+                      className="cursor-pointer hover:bg-muted/50 group"
+                      onClick={() => viewComplaintDetails(complaint)}
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center">
+                          {complaint.type}
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-xs">
+                        <div className="truncate flex items-center gap-2 group-hover:text-primary">
+                          {complaint.description}
+                          <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
                           className={statusColors[complaint.status] || ""}
                         >
-                          {complaint.status.charAt(0).toUpperCase() +
-                            complaint.status.slice(1).replace("-", " ")}
+                          {getStatusText(complaint.status)}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -383,27 +424,17 @@ const ViewComplaints = () => {
                       </TableCell>
                       <TableCell>{formatDate(complaint.createdAt)}</TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">Open menu</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem
-                              onClick={() => viewComplaintDetails(complaint)}
-                            >
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => openStatusDialog(complaint)}
-                            >
-                              Update Status
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openStatusDialog(complaint);
+                          }}
+                        >
+                          <span className="sr-only">Update status</span>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -416,7 +447,7 @@ const ViewComplaints = () => {
 
       {/* Complaint Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle className="text-xl">Complaint Details</DialogTitle>
             <DialogDescription>
@@ -426,140 +457,155 @@ const ViewComplaints = () => {
           </DialogHeader>
 
           {selectedComplaint && (
-            <div className="space-y-4 max-h-[70vh] overflow-y-auto">
-              <div className="flex flex-wrap gap-3">
-                <Badge
-                  variant="outline"
-                  className={statusColors[selectedComplaint.status] || ""}
-                >
-                  {selectedComplaint.status.charAt(0).toUpperCase() +
-                    selectedComplaint.status.slice(1).replace("-", " ")}
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className={urgencyColors[selectedComplaint.urgencyLevel] || ""}
-                >
-                  {selectedComplaint.urgencyLevel.charAt(0).toUpperCase() +
-                    selectedComplaint.urgencyLevel.slice(1)} Urgency
-                </Badge>
-                <Badge variant="outline">
-                  {selectedComplaint.isAnonymous ? "Anonymous" : "Public"}
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Left column - Details */}
+              <div className="md:col-span-2 space-y-6">
+                <div className="flex flex-wrap gap-3">
+                  <Badge
+                    variant="outline"
+                    className={statusColors[selectedComplaint.status] || ""}
+                  >
+                    {getStatusText(selectedComplaint.status)}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={urgencyColors[selectedComplaint.urgencyLevel] || ""}
+                  >
+                    {selectedComplaint.urgencyLevel.charAt(0).toUpperCase() +
+                      selectedComplaint.urgencyLevel.slice(1)} Urgency
+                  </Badge>
+                  <Badge variant="outline">
+                    {selectedComplaint.isAnonymous ? "Anonymous" : "Public"}
+                  </Badge>
+                </div>
+                
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">
                     Complaint Type
                   </h3>
-                  <p>{selectedComplaint.type}</p>
+                  <p className="font-medium">{selectedComplaint.type}</p>
                 </div>
+
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    Expected Resolution
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                    Location
                   </h3>
-                  <p>{selectedComplaint.expectedResolution}</p>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Location
-                </h3>
-                <p className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  {selectedComplaint.location}
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  Description
-                </h3>
-                <div className="p-3 rounded-md bg-muted/30 mt-1">
-                  <p>{selectedComplaint.description}</p>
-                </div>
-              </div>
-
-              {!selectedComplaint.isAnonymous && (
-                <Card className="bg-muted/30">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Contact Information</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground">
-                          Name
-                        </h4>
-                        <p className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
-                          {selectedComplaint.name || "Not provided"}
-                        </p>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground">
-                          Email
-                        </h4>
-                        <p>{selectedComplaint.email || "Not provided"}</p>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium text-muted-foreground">
-                          Phone
-                        </h4>
-                        <p>{selectedComplaint.phone || "Not provided"}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {selectedComplaint.images && selectedComplaint.images.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">
-                    Attached Images ({selectedComplaint.images.length})
-                  </h3>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {selectedComplaint.images.map((image, index) => (
-                      <div
-                        key={index}
-                        className="relative aspect-square bg-muted rounded-md overflow-hidden cursor-pointer"
-                        onClick={() => viewImage(image)}
-                      >
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Image className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                        <img
-                          src={`http://localhost:5000${image}`}
-                          alt={`Complaint image ${index + 1}`}
-                          className="absolute inset-0 h-full w-full object-cover hover:opacity-90 transition-opacity"
-                        />
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <p>{selectedComplaint.location}</p>
                   </div>
                 </div>
-              )}
+
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                    Description
+                  </h3>
+                  <div className="p-4 rounded-md bg-muted/30">
+                    <p className="whitespace-pre-wrap">{selectedComplaint.description}</p>
+                  </div>
+                </div>
+
+                {!selectedComplaint.isAnonymous && (
+                  <Card className="bg-muted/30">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base">Contact Information</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <h4 className="text-sm font-medium text-muted-foreground">
+                            Name
+                          </h4>
+                          <p className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            {selectedComplaint.name || "Not provided"}
+                          </p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-muted-foreground">
+                            Email
+                          </h4>
+                          <p>{selectedComplaint.email || "Not provided"}</p>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium text-muted-foreground">
+                            Phone
+                          </h4>
+                          <p>{selectedComplaint.phone || "Not provided"}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Right column - Images and actions */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                    Resolution Timeline
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Expected Resolution:</span>
+                      <span className="font-medium">{selectedComplaint.expectedResolution}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Last Updated:</span>
+                      <span className="font-medium">{formatDate(selectedComplaint.updatedAt)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedComplaint.images && selectedComplaint.images.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                      Attached Images
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {selectedComplaint.images.map((image, index) => (
+                        <div
+                          key={index}
+                          className="relative aspect-square bg-muted rounded-md overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+                          onClick={() => viewImage(image)}
+                        >
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Image className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                          <img
+                            src={`http://localhost:5000${image}`}
+                            alt={`Complaint image ${index + 1}`}
+                            className="absolute inset-0 h-full w-full object-cover hover:opacity-90 transition-opacity"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-4">
+                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                    Actions
+                  </h3>
+                  <div className="space-y-2">
+                    <Button 
+                      onClick={() => openStatusDialog(selectedComplaint)}
+                      className="w-full"
+                    >
+                      Update Status
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsDetailsOpen(false)}
+                      className="w-full"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDetailsOpen(false)}
-            >
-              Close
-            </Button>
-            <Button
-              onClick={() => {
-                setIsDetailsOpen(false);
-                if (selectedComplaint) {
-                  openStatusDialog(selectedComplaint);
-                }
-              }}
-            >
-              Update Status
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -615,15 +661,15 @@ const ViewComplaints = () => {
 
       {/* Image Viewer Dialog */}
       <Dialog open={isImageOpen} onOpenChange={setIsImageOpen}>
-        <DialogContent className="sm:max-w-3xl">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Complaint Image</DialogTitle>
           </DialogHeader>
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center overflow-hidden">
             <img
               src={`http://localhost:5000${selectedImage}`}
               alt="Complaint"
-              className="max-h-[70vh] max-w-full object-contain rounded-md"
+              className="max-h-[calc(90vh-8rem)] max-w-full object-contain rounded-md"
             />
           </div>
           <DialogFooter>
