@@ -15,13 +15,12 @@ export const STORE_SIGNUP_DATA = async (
     const { role } = request.body;
 
     if (role === "admin") {
-      const { fullName, email, password, clerkUserId, role } = request.body;
+      const { fullName, email,  clerkUserId, role } = request.body;
 
       const newAdmin = new AdminSchema({
         fullName,
         email,
         role,
-        password,
         clerkUserId, // storing the clerkUserId as provided
       });
       console.log("-----------------");
@@ -31,12 +30,11 @@ export const STORE_SIGNUP_DATA = async (
       await newAdmin.save();
       response.status(200).json({ message: "Teacher sign up successful" });
     } else if (role === "user") {
-      const { fullName, email, clerkUserId, password, role, address, phoneNumber  } = request.body;
+      const { fullName, email, clerkUserId,  role, address, phoneNumber  } = request.body;
 
       const newUser = new UserSchema({
         fullName,
         email,
-        password,
         role,
         address,
         phoneNumber,
