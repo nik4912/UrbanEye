@@ -6,6 +6,7 @@ import {
   Edit3,
   CheckSquare,
   User2Icon,
+  ClipboardList
 } from "lucide-react"
 
 import { useUser } from "@clerk/clerk-react"
@@ -44,6 +45,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Profile",
       url: "/profile",
       icon: User2Icon,
+    },
+    {
+      title: "Complaints",
+      url: "/complaints",
+      icon:  ClipboardList, // Replace with the appropriate icon component
     },
   ]
 
