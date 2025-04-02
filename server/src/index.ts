@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import AuthRoutes from './Routes/AuthRoutes';
 import DataRoutes from './Routes/DataRoutes';
 import path from 'path';
+import ComplaintRoutes from './Routes/ComplaintRoutes';
 
 dotenv.config();
 
@@ -27,6 +28,8 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 app.use("/api/auth", AuthRoutes);
 app.use("/api/data", DataRoutes);
+app.use('/api/complaint', ComplaintRoutes);
+
 
 app.get('/', (req, res) => {
     res.send('Server is running');
