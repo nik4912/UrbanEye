@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import UserTypeCard from "@/components/user-type-card";
 import { useSignUp, useClerk } from "@clerk/clerk-react";
+import MoonLoader from "react-spinners/MoonLoader";
 import {
   InputOTP,
   InputOTPGroup,
@@ -26,6 +27,7 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
   // role now becomes either "citizen" for a regular user or "admin" for an admin account.
   const [role, setRole] = useState<"citizen" | "admin" | "">("");
   const [value, setValue] = useState<string>(""); // OTP value
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // State for citizen form (UserSchema)
   const [userData, setUserData] = useState({
@@ -65,25 +67,44 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
     }
   };
 
-  // Registers the user via Clerk API and sends an OTP email.
   const handleRegistration = async () => {
     if (!signUp) {
       console.error("SignUp resource is not ready");
       return;
     }
+
+    setIsLoading(true); // Start loading
+
     const emailToRegister =
       role === "citizen" ? userData.email : adminData.email;
     const passwordToRegister =
       role === "citizen" ? userData.password : adminData.password;
-    setStep(3);
+
     try {
       await signUp.create({
         emailAddress: emailToRegister,
         password: passwordToRegister,
       });
       await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-    } catch (error) {
+      setStep(3); // Only advance to step 3 if registration is successful
+    } catch (error: any) {
+      // Display meaningful error messages
       console.error("Sign up error", error);
+
+      // Extract error message from Clerk error object
+      let errorMessage = "An error occurred during sign up.";
+
+      if (error.errors && error.errors.length > 0) {
+        // Get the first error message
+        errorMessage = error.errors[0].message || errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      // Show error using toast
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false); // Stop loading regardless of outcome
     }
   };
 
@@ -216,12 +237,24 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
               required
             />
           </div>
+          // For citizen form
           <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={handleBack}>
+            <Button type="button" variant="outline" onClick={handleBack} disabled={isLoading}>
               Back
             </Button>
-            <Button type="button" onClick={handleRegistration}>
-              Next
+            <Button
+              type="button"
+              onClick={handleRegistration}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <MoonLoader color="#000" size={20}  />
+                  <span>Processing...</span>
+                </span>
+              ) : (
+                "Next"
+              )}
             </Button>
           </div>
         </div>
@@ -286,11 +319,21 @@ const SignUpForm = ({ onSwitchForm }: SignUpFormProps) => {
             />
           </div>
           <div className="flex justify-between">
-            <Button type="button" variant="outline" onClick={handleBack}>
+            <Button type="button" variant="outline" onClick={handleBack} disabled={isLoading}>
               Back
             </Button>
-            <Button type="button" onClick={handleRegistration}>
-              Next
+            <Button
+              type="button"
+              onClick={handleRegistration}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <MoonLoader color="#000" size={20} />
+                </span>
+              ) : (
+                "Next"
+              )}
             </Button>
           </div>
         </div>
