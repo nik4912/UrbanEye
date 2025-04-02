@@ -5,6 +5,7 @@ import {
   Settings2,
   Edit3,
   CheckSquare,
+  User2Icon,
 } from "lucide-react"
 
 import { useUser } from "@clerk/clerk-react"
@@ -38,6 +39,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Settings",
       url: "/settings",
       icon: Settings2,
+    },
+    {
+      title: "Profile",
+      url: "/profile",
+      icon: User2Icon,
     },
   ]
 
