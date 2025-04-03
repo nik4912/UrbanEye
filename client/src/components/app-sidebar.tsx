@@ -7,14 +7,11 @@ import {
   CheckSquare,
   User2Icon,
   ClipboardList,
-  View,
-  ViewIcon,
-  EyeIcon,
-  EyeClosedIcon,
-  EyeOffIcon,
   ScanEye,
   ScanEyeIcon,
-  RadioTower
+  RadioTower,
+  MessageSquare,
+
 } from "lucide-react"
 
 import { useUser } from "@clerk/clerk-react"
@@ -30,8 +27,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { title } from "process"
-import { url } from "inspector"
+
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useUser()
@@ -80,6 +76,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title:"Social",
       url:"/social-page",
       icon : RadioTower,
+    },
+    {
+      title:"Chat with Admin",
+      url:"/chat",
+      icon : MessageSquare,
     }
   ]
 

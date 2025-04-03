@@ -9,8 +9,7 @@ import AuthRoutes from './Routes/AuthRoutes';
 import DataRoutes from './Routes/DataRoutes';
 import path from 'path';
 import ComplaintRoutes from './Routes/ComplaintRoutes';
-import ComplaintModel from './Models/ComplaintModel'; // ensure you have a Complaint model
-
+import ComplaintModel from './models/ComplaintModel';
 dotenv.config();
 
 const app = express();

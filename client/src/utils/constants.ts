@@ -13,3 +13,5 @@ export const GET_COMPLAINTS = `${COMPLAINT_API}/get-complaints`;
 // Add these to your existing constants
 export const LIKE_COMPLAINT = '/api/complaint/:id/like';
 export const COMMENT_ON_COMPLAINT = '/api/complaint/:id/comment';
+
+export const FETCH_CHAT = "/api/chat/fetch-chat";
