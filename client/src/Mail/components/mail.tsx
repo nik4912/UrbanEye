@@ -40,6 +40,7 @@ export function Mail({
   defaultLayout = [40, 60], // Updated to only have two panels
 }: MailProps) {
   const [mail, setMail] = useMail()
+  
 
   const handleAddContact = (userId: string) => {
     // In a real application, this would create a new conversation or add the user to contacts

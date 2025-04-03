@@ -1,10 +1,10 @@
 const express = require('express');
-const router = express.Router();
-const Message = require('../models/Message');
+const MessageRoutes = express.Router();
+const Message = require('../models/MessageSchema');
 const auth = require('../middleware/auth');
 
 // Get conversation history between two users
-router.get('/conversations/:userId', auth, async (req, res) => {
+MessageRoutes.get('/conversations/:userId', auth, async (req : any, res : any,) => {
   try {
     const currentUserId = req.user.id;
     const otherUserId = req.params.userId;
@@ -31,7 +31,7 @@ router.get('/conversations/:userId', auth, async (req, res) => {
 });
 
 // Get all conversations for current user
-router.get('/conversations', auth, async (req, res) => {
+MessageRoutes.get('/conversations', auth, async (req: any, res : any,) => {
   try {
     const userId = req.user.id;
     
@@ -74,4 +74,4 @@ router.get('/conversations', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default MessageRoutes;

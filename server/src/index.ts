@@ -14,8 +14,8 @@ import ContactRoutes from './Routes/ContactRoutes';
 dotenv.config();
 
 const app = express();
-import messageRoutes from './Routes/MessageRoutes';
 import socketController from './controllers/SocketController';
+import MessageRoutes from './Routes/MessageRoutes';
 
 const server = http.createServer(app);
 
@@ -108,6 +108,7 @@ app.use("/api/auth", AuthRoutes);
 app.use("/api/data", DataRoutes);
 app.use('/api/complaint', ComplaintRoutes);
 app.use('/api/contacts', ContactRoutes);
+app.use('/api/messages', MessageRoutes);
 
 app.get('/', (req, res) => {
     res.send('Server is running');
