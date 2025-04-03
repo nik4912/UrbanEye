@@ -1,4 +1,3 @@
-import { format } from "date-fns"
 import {
   MoreVertical,
   Send,
@@ -36,7 +35,6 @@ interface ChatMessage {
 }
 
 export function MailDisplay({ mail }: MailDisplayProps) {
-  const today = new Date()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   
   // Sample chat messages
