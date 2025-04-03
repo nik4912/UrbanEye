@@ -9,3 +9,7 @@ export const FETCH_USER_INFO = `${DATA_API}/fetch-user-info`;
 export const COMPLAINT_API = "api/complaint";
 export const CREATE_COMPLAINT = `${COMPLAINT_API}/create-complaint`;
 export const GET_COMPLAINTS = `${COMPLAINT_API}/get-complaints`;
+
+// Add these to your existing constants
+export const LIKE_COMPLAINT = '/api/complaint/:id/like';
+export const COMMENT_ON_COMPLAINT = '/api/complaint/:id/comment';
