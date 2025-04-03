@@ -13,7 +13,8 @@ import {
   EyeClosedIcon,
   EyeOffIcon,
   ScanEye,
-  ScanEyeIcon
+  ScanEyeIcon,
+  RadioTower
 } from "lucide-react"
 
 import { useUser } from "@clerk/clerk-react"
@@ -74,6 +75,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title:"My Complaints",
       url:"/my-complaints",
       icon : ScanEyeIcon,
+    },
+    {
+      title:"Social",
+      url:"/social-page",
+      icon : RadioTower,
     }
   ]
 

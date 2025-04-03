@@ -17,6 +17,7 @@ import Complaints from './pages/Complaints/Complaints'
 import CreateComplaints from './pages/CreateComplaints/CreateComplaints'
 import ViewComplaints from './pages/ViewComplaints/ViewComplaints'
 import MyComplaints from './pages/MyComplaints/MyComplaints'
+import Social from './pages/Social/Social'
 
 
 // Ensure to replace or import your apiClient and FETCH_USER_INFO endpoint.
@@ -98,6 +99,7 @@ function App() {
         <Route path="/create-complaints" element={<PrivateRoute><CreateComplaints /></PrivateRoute>}/>
         <Route path="/view-complaints" element={<PrivateRoute><ViewComplaints /></PrivateRoute>}/>
         <Route path="/my-complaints" element={<PrivateRoute><MyComplaints /></PrivateRoute>}/>
+        <Route path="/social-page" element={<PrivateRoute><Social /></PrivateRoute>}/>
         <Route path="/404" element={<Error />} />0
         <Route path='*' element={<Navigate to="/404" />} />
       </Routes>
