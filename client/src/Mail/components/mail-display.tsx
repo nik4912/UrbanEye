@@ -22,6 +22,7 @@ import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { Mail } from "../data"
 import { useState, useRef, useEffect } from "react"
+import { useSocket } from "@/configurations/SocketContext"
 
 interface MailDisplayProps {
   mail: Mail | null
@@ -36,7 +37,7 @@ interface ChatMessage {
 
 export function MailDisplay({ mail }: MailDisplayProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  
+
   // Sample chat messages
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -70,7 +71,7 @@ export function MailDisplay({ mail }: MailDisplayProps) {
       timestamp: new Date(Date.now() - 1000 * 60 * 23)
     }
   ]);
-  
+
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
@@ -79,37 +80,45 @@ export function MailDisplay({ mail }: MailDisplayProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
+  // Example implementation needed in mail-display.tsx
+  const { socket } = useSocket();
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
 
-    // Add user message
+    // Create message object
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       content: inputMessage,
       sender: 'user',
       timestamp: new Date()
     };
-    
+
+    // Add to local state
     setMessages(prev => [...prev, userMessage]);
+
+    // Send via socket
+    socket?.emit('send_message', {
+      recipientId: mail?.id ?? '', // conversation/recipient ID
+      content: inputMessage
+    });
+
     setInputMessage('');
-    
-    // Simulate bot typing
-    setIsTyping(true);
-    
-    // Simulate bot response after delay
-    setTimeout(() => {
-      const botMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        content: "Thank you for your inquiry. I'm checking our database for the most up-to-date information. One moment please...",
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, botMessage]);
-      setIsTyping(false);
-    }, 2500);
   };
+
+  // Also need to add in useEffect:
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('receive_message', (message) => {
+      setMessages(prev => [...prev, message]);
+    });
+
+    return () => {
+      socket.off('receive_message');
+    };
+  }, [socket]);
 
   return (
     <div className="flex h-full flex-col max-h-screen overflow-hidden">
@@ -158,8 +167,8 @@ export function MailDisplay({ mail }: MailDisplayProps) {
         <div className="flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
-              <div 
-                key={message.id} 
+              <div
+                key={message.id}
                 className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fadeIn`}
               >
                 {message.sender === 'bot' && (
@@ -173,20 +182,19 @@ export function MailDisplay({ mail }: MailDisplayProps) {
                     </AvatarFallback>
                   </Avatar>
                 )}
-                
-                <div 
-                  className={`max-w-[75%] px-4 py-2 rounded-lg shadow-sm ${
-                    message.sender === 'user' 
-                      ? 'bg-primary text-primary-foreground rounded-tr-none' 
+
+                <div
+                  className={`max-w-[75%] px-4 py-2 rounded-lg shadow-sm ${message.sender === 'user'
+                      ? 'bg-primary text-primary-foreground rounded-tr-none'
                       : 'bg-muted rounded-tl-none'
-                  }`}
+                    }`}
                 >
                   <div className="whitespace-pre-wrap break-words text-sm">{message.content}</div>
                   <div className="text-xs mt-1 opacity-70">
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
-                
+
                 {message.sender === 'user' && (
                   <Avatar className="h-8 w-8 ml-2 mt-1 flex-shrink-0">
                     <AvatarImage src="/user-avatar.png" alt="You" />
@@ -195,7 +203,7 @@ export function MailDisplay({ mail }: MailDisplayProps) {
                 )}
               </div>
             ))}
-            
+
             {isTyping && (
               <div className="flex justify-start animate-fadeIn">
                 <Avatar className="h-8 w-8 mr-2 mt-1 flex-shrink-0">
@@ -233,10 +241,10 @@ export function MailDisplay({ mail }: MailDisplayProps) {
                     }
                   }}
                 />
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
                 >
                   <Paperclip className="h-4 w-4" />

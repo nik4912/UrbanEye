@@ -14,14 +14,22 @@ import ContactRoutes from './Routes/ContactRoutes';
 dotenv.config();
 
 const app = express();
+import messageRoutes from './Routes/MessageRoutes';
+import socketController from './controllers/SocketController';
+
 const server = http.createServer(app);
+
+// Socket.io setup
 const io = new Server(server, {
-    cors: {
-        origin: process.env.ORIGIN || "http://localhost:5173",
-        methods: ['GET', 'POST'],
-        credentials: true
-    }
+  cors: {
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    methods: ['GET', 'POST'],
+    credentials: true
+  }
 });
+
+// Initialize chat socket handlers
+socketController(io);
 
 const port = process.env.PORT || 5000;
 const DATABASE_URL = process.env.DATABASE_URL;
