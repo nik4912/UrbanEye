@@ -36,7 +36,8 @@ export const CREATE_COMPLAINTS = async (
       name,
       email,
       phone,
-      expectedResolution
+      expectedResolution,
+      userId  // Add userId to the extraction
     } = request.body;
 
     // Create a new complaint document
@@ -51,7 +52,7 @@ export const CREATE_COMPLAINTS = async (
       phone: isAnonymous === 'true' ? undefined : phone,
       expectedResolution: expectedResolution || "3-5 days",
       images: imagePaths,
-      // userId: can be added here if you have authentication implemented
+      userId: userId || undefined  // Add userId to the complaint document
     });
 
     // Save the complaint to the database

@@ -14,7 +14,7 @@ export interface IComplaint extends Document {
   status: "pending" | "in-progress" | "resolved" | "rejected";
   createdAt: Date;
   updatedAt: Date;
-  userId?: mongoose.Types.ObjectId;
+  userId?: string; // Changed from mongoose.Types.ObjectId to string
 }
 
 const ComplaintSchema: Schema = new Schema(
@@ -69,8 +69,7 @@ const ComplaintSchema: Schema = new Schema(
       default: "pending",
     },
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: String, // Changed from mongoose.Schema.Types.ObjectId to String
       required: false,
     },
   },

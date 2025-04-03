@@ -41,6 +41,7 @@ import {
 import { apiClient } from "@/lib/api-client"
 import { CREATE_COMPLAINT } from "@/utils/constants"
 import { toast } from "sonner"
+import { useUser } from "@clerk/clerk-react"
 
 
 const CreateComplaints = () => {
@@ -60,6 +61,7 @@ const CreateComplaints = () => {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [submitError, setSubmitError] = useState<string | null>(null)
     const [submitSuccess, setSubmitSuccess] = useState(false)
+    const { user } = useUser()
 
     const handleChange = (field: string, value: string) => {
         setComplaintData({
@@ -87,43 +89,48 @@ const CreateComplaints = () => {
         e.preventDefault()
         setIsSubmitting(true)
         setSubmitError(null)
-        
+
         try {
             // Create FormData object for multipart/form-data submission
             const formData = new FormData()
-            
+
             // Add all complaint data fields
             Object.entries(complaintData).forEach(([key, value]) => {
                 formData.append(key, value)
             })
-            
+
             // Add anonymous flag
             formData.append('isAnonymous', isAnonymous.toString())
-            
+
+            // Add user ID from Clerk - THIS IS THE NEW CODE
+            if (user) {
+                formData.append('userId', user.id);
+            }
+
             // Add images if any
             if (images) {
                 Array.from(images).forEach((file) => {
                     formData.append('images', file)
                 })
             }
-            
+
             // Submit to backend using axios via apiClient
             const response = await apiClient.post(CREATE_COMPLAINT, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 }
             })
-            
+
             console.log("Complaint submitted successfully:", response.data)
-            
+
             // Update state
             setSubmitSuccess(true)
-            
+
             // Show success toast
             toast.success("Complaint submitted successfully!", {
                 description: "Your complaint has been logged and is being processed."
             })
-            
+
             // Optional: Reset form or redirect
             // setTimeout(() => {
             //     setComplaintData({
@@ -140,18 +147,18 @@ const CreateComplaints = () => {
             //     setIsAnonymous(false)
             //     // Or redirect: navigate("/dashboard")
             // }, 3000)
-            
-        } catch (error : any) {
+
+        } catch (error: any) {
             console.error("Error submitting complaint:", error)
-            
+
             // Extract error message from response if available
             let errorMessage = "Failed to submit complaint. Please try again."
             if (error.response && error.response.data && error.response.data.message) {
                 errorMessage = error.response.data.message
             }
-            
+
             setSubmitError(errorMessage)
-            
+
             // Show error toast
             toast.error("Submission Failed", {
                 description: errorMessage
@@ -399,7 +406,7 @@ const CreateComplaints = () => {
                                     </div>
                                 </div>
                             )}
-                            
+
                             {submitError && (
                                 <div className="rounded-lg border border-red-100 bg-red-50 p-4 mb-4">
                                     <div className="flex items-center gap-3">
@@ -413,7 +420,7 @@ const CreateComplaints = () => {
                                     </div>
                                 </div>
                             )}
-                            
+
                             <Card>
                                 <CardHeader>
                                     <CardTitle>Complaint Preview</CardTitle>
@@ -432,10 +439,10 @@ const CreateComplaints = () => {
                                             <div className="flex items-center gap-2">
                                                 <AlertCircleIcon
                                                     className={`h-4 w-4 ${complaintData.urgencyLevel === "high"
-                                                            ? "text-red-500"
-                                                            : complaintData.urgencyLevel === "medium"
-                                                                ? "text-amber-500"
-                                                                : "text-green-500"
+                                                        ? "text-red-500"
+                                                        : complaintData.urgencyLevel === "medium"
+                                                            ? "text-amber-500"
+                                                            : "text-green-500"
                                                         }`}
                                                 />
                                                 <span>
@@ -526,15 +533,15 @@ const CreateComplaints = () => {
                                     </div>
                                 </CardContent>
                                 <CardFooter className="flex justify-between">
-                                    <Button 
-                                        variant="outline" 
+                                    <Button
+                                        variant="outline"
                                         onClick={() => (document.querySelector('[data-value="create"]') as HTMLElement)?.click()}
                                         disabled={isSubmitting}
                                     >
                                         Edit Complaint
                                     </Button>
-                                    <Button 
-                                        onClick={handleSubmit} 
+                                    <Button
+                                        onClick={handleSubmit}
                                         disabled={isSubmitting || submitSuccess}
                                     >
                                         {isSubmitting ? (
