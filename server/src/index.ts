@@ -10,6 +10,7 @@ import DataRoutes from './Routes/DataRoutes';
 import path from 'path';
 import ComplaintRoutes from './Routes/ComplaintRoutes';
 import ComplaintModel from './models/ComplaintModel';
+import ContactRoutes from './Routes/ContactRoutes';
 dotenv.config();
 
 const app = express();
@@ -98,6 +99,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 app.use("/api/auth", AuthRoutes);
 app.use("/api/data", DataRoutes);
 app.use('/api/complaint', ComplaintRoutes);
+app.use('/api/contacts', ContactRoutes);
 
 app.get('/', (req, res) => {
     res.send('Server is running');

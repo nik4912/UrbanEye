@@ -14,7 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { apiClient } from "@/lib/api-client"
-import { FETCH_CHAT } from "@/utils/constants"
+import { FETCH_CHAT, FETCH_CONTACTS } from "@/utils/constants"
 
 interface Contact {
   id: string;
@@ -36,11 +36,11 @@ export function AddContactDialog({ onAddContact }: AddContactDialogProps) {
     setLoading(true)
     try {
       // Make API call to fetch contacts
-      const response = await apiClient.get(FETCH_CHAT)
+      const response = await apiClient.get(FETCH_CONTACTS)
       // Assume the backend returns data under response.data.contacts
       const fetchedContacts: Contact[] = response.data.contacts.map((user: any) => ({
         id: user._id || user.id,
-        name: user.name,
+        name: user.name || "Unknown", // fallback value for missing name
         email: user.email || user.teacherId || user.studentId,
         status: user.status || "online", // default status if not provided
       }))

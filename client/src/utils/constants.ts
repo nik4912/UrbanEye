@@ -14,4 +14,5 @@ export const GET_COMPLAINTS = `${COMPLAINT_API}/get-complaints`;
 export const LIKE_COMPLAINT = '/api/complaint/:id/like';
 export const COMMENT_ON_COMPLAINT = '/api/complaint/:id/comment';
 
-export const FETCH_CHAT = "/api/chat/fetch-chat";
+export const FETCH_CHAT = "/api/contacts/fetch-chat";
+export const FETCH_CONTACTS = "/api/contacts/admin-contacts";
