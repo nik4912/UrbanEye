@@ -238,42 +238,42 @@ export default function Settings() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                <div className="space-y-4">
-  <div className="space-y-2">
-    <Label>Theme</Label>
-    <p className="text-xs text-muted-foreground">Select how UrbanEYE appears to you</p>
-  </div>
-  <div className="grid grid-cols-3 gap-4">
-  <div 
-      className={`flex flex-col items-center justify-center cursor-pointer rounded-md border-2 p-3 transition-all ${theme === "system" ? "border-primary" : "border-transparent hover:border-muted"}`}
-      onClick={() => setTheme("system")}
-    >
-      <div className="flex justify-center w-full">
-        <SystemMode />
-      </div>
-      <p className="mt-2 text-center text-sm font-medium">System</p>
-    </div>
-    <div 
-      className={`flex flex-col items-center justify-center cursor-pointer rounded-md border-2 p-3 transition-all ${theme === "light" ? "border-primary" : "border-transparent hover:border-muted"}`}
-      onClick={() => setTheme("light")}
-    >
-      <div className="flex justify-center w-full">
-        <LightMode />
-      </div>
-      <p className="mt-2 text-center text-sm font-medium">Light</p>
-    </div>
-    <div 
-      className={`flex flex-col items-center justify-center cursor-pointer rounded-md border-2 p-3 transition-all ${theme === "dark" ? "border-primary" : "border-transparent hover:border-muted"}`}
-      onClick={() => setTheme("dark")}
-    >
-      <div className="flex justify-center w-full">
-        <DarkMode />
-      </div>
-      <p className="mt-2 text-center text-sm font-medium">Dark</p>
-    </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Theme</Label>
+                      <p className="text-xs text-muted-foreground">Select how UrbanEYE appears to you</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div
+                        className={`flex flex-col items-center justify-center cursor-pointer rounded-md border-2 p-3 transition-all ${theme === "system" ? "border-primary" : "border-transparent hover:border-muted"}`}
+                        onClick={() => setTheme("system")}
+                      >
+                        <div className="flex justify-center w-full">
+                          <SystemMode />
+                        </div>
+                        <p className="mt-2 text-center text-sm font-medium">System</p>
+                      </div>
+                      <div
+                        className={`flex flex-col items-center justify-center cursor-pointer rounded-md border-2 p-3 transition-all ${theme === "light" ? "border-primary" : "border-transparent hover:border-muted"}`}
+                        onClick={() => setTheme("light")}
+                      >
+                        <div className="flex justify-center w-full">
+                          <LightMode />
+                        </div>
+                        <p className="mt-2 text-center text-sm font-medium">Light</p>
+                      </div>
+                      <div
+                        className={`flex flex-col items-center justify-center cursor-pointer rounded-md border-2 p-3 transition-all ${theme === "dark" ? "border-primary" : "border-transparent hover:border-muted"}`}
+                        onClick={() => setTheme("dark")}
+                      >
+                        <div className="flex justify-center w-full">
+                          <DarkMode />
+                        </div>
+                        <p className="mt-2 text-center text-sm font-medium">Dark</p>
+                      </div>
 
-  </div>
-</div>
+                    </div>
+                  </div>
                   <Separator />
                   <div className="space-y-2">
                     <Label htmlFor="font-size">Font Size</Label>

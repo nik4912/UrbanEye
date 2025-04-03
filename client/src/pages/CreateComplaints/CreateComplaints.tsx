@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
     Breadcrumb,
@@ -42,9 +42,11 @@ import { apiClient } from "@/lib/api-client"
 import { CREATE_COMPLAINT } from "@/utils/constants"
 import { toast } from "sonner"
 import { useUser } from "@clerk/clerk-react"
-
+import useStore from "@/store/store"
 
 const CreateComplaints = () => {
+    const { user } = useUser();
+    const userData = useStore((state) => state.userData)
     const [isAnonymous, setIsAnonymous] = useState(false)
     const [complaintData, setComplaintData] = useState({
         type: "",
@@ -53,7 +55,6 @@ const CreateComplaints = () => {
         urgencyLevel: "medium",
         name: "",
         email: "",
-        phone: "",
         expectedResolution: "3-5 days"
     })
     const [images, setImages] = useState<FileList | null>(null)
@@ -61,7 +62,17 @@ const CreateComplaints = () => {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [submitError, setSubmitError] = useState<string | null>(null)
     const [submitSuccess, setSubmitSuccess] = useState(false)
-    const { user } = useUser()
+
+    useEffect(() => {
+        if (userData) {
+            setComplaintData(prev => ({
+                ...prev,
+                name: userData.data?.fullName || "",
+                email: userData.data?.email || ""
+            }));
+        }
+    }, [userData]);
+
 
     const handleChange = (field: string, value: string) => {
         setComplaintData({
@@ -69,6 +80,7 @@ const CreateComplaints = () => {
             [field]: value
         })
     }
+
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -352,6 +364,7 @@ const CreateComplaints = () => {
                                                 <div className="space-y-2">
                                                     <Label htmlFor="name">Full Name</Label>
                                                     <Input
+                                                        disabled={userData ? true : false}
                                                         id="name"
                                                         placeholder="John Doe"
                                                         value={complaintData.name}
@@ -361,6 +374,8 @@ const CreateComplaints = () => {
                                                 <div className="space-y-2">
                                                     <Label htmlFor="email">Email</Label>
                                                     <Input
+                                                        disabled={userData ? true : false}
+
                                                         id="email"
                                                         type="email"
                                                         placeholder="john@example.com"
@@ -368,16 +383,6 @@ const CreateComplaints = () => {
                                                         onChange={(e) => handleChange("email", e.target.value)}
                                                     />
                                                 </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="phone">Phone Number</Label>
-                                                <Input
-                                                    id="phone"
-                                                    type="tel"
-                                                    placeholder="(123) 456-7890"
-                                                    value={complaintData.phone}
-                                                    onChange={(e) => handleChange("phone", e.target.value)}
-                                                />
                                             </div>
                                         </div>
                                     )}
@@ -505,10 +510,6 @@ const CreateComplaints = () => {
                                             <div>
                                                 <h3 className="text-sm font-medium text-muted-foreground">Contact Email</h3>
                                                 <p>{complaintData.email || "Not provided"}</p>
-                                            </div>
-                                            <div>
-                                                <h3 className="text-sm font-medium text-muted-foreground">Contact Phone</h3>
-                                                <p>{complaintData.phone || "Not provided"}</p>
                                             </div>
                                         </div>
                                     )}
