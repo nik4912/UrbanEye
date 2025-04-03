@@ -7,6 +7,7 @@ export const GET_ADMIN_CONTACTS = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    console.log("Fetching admin contacts...");
     // Fetch all admin contacts from the database
     const admins = await AdminSchema.find({});
     response.status(200).json({ contacts: admins });
