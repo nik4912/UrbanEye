@@ -36,13 +36,17 @@ import {
     MapPinIcon,
     SendIcon,
     UserIcon,
-    CheckCircleIcon
+    CheckCircleIcon,
+    LoaderIcon
 } from "lucide-react"
 import { apiClient } from "@/lib/api-client"
 import { CREATE_COMPLAINT } from "@/utils/constants"
 import { toast } from "sonner"
 import { useUser } from "@clerk/clerk-react"
 import useStore from "@/store/store"
+import * as tf from '@tensorflow/tfjs';
+import { load as loadCOCOSSD } from '@tensorflow-models/coco-ssd';
+import EXIF from 'exif-js';
 
 const CreateComplaints = () => {
     const { user } = useUser();
@@ -62,6 +66,7 @@ const CreateComplaints = () => {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [submitError, setSubmitError] = useState<string | null>(null)
     const [submitSuccess, setSubmitSuccess] = useState(false)
+    const [isAnalyzing, setIsAnalyzing] = useState(false)
 
     useEffect(() => {
         if (userData) {
@@ -73,7 +78,6 @@ const CreateComplaints = () => {
         }
     }, [userData]);
 
-
     const handleChange = (field: string, value: string) => {
         setComplaintData({
             ...complaintData,
@@ -81,20 +85,177 @@ const CreateComplaints = () => {
         })
     }
 
+    // Load and initialize the COCO-SSD model
+    const detectObjectsInImage = async (file) => {
+        setIsAnalyzing(true);
+        try {
+            // Load the COCO-SSD model
+            const model = await loadCOCOSSD();
+            
+            // Create an image element for the model to analyze
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            
+            await new Promise(resolve => {
+                img.onload = resolve;
+            });
+            
+            // Make predictions
+            const predictions = await model.detect(img);
+            
+            // Extract location from EXIF data
+            let location = "";
+            try {
+                EXIF.getData(file, function() {
+                    const lat = EXIF.getTag(this, "GPSLatitude");
+                    const lon = EXIF.getTag(this, "GPSLongitude");
+                    if (lat && lon) {
+                        location = `Lat: ${lat}, Long: ${lon}`;
+                        handleChange("location", location);
+                    }
+                });
+            } catch (error) {
+                console.log("No EXIF data available");
+            }
+            
+            // Process the predictions to determine complaint type and description
+            let detectedObjects = predictions.map(p => p.class).join(", ");
+            let complaintType = determineComplaintType(predictions);
+            let description = generateDescription(predictions);
+            
+            // Update the form with detected information
+            if (complaintType) {
+                handleChange("type", complaintType);
+            }
+            
+            handleChange("description", description);
+            
+            return { success: true };
+        } catch (error) {
+            console.error("Error analyzing image:", error);
+            toast.error("Failed to analyze image", {
+                description: "Please try again or enter details manually."
+            });
+            return { success: false, error };
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+    
+    // Helper function to determine complaint type based on detected objects
+    const determineComplaintType = (predictions) => {
+        const objects = predictions.map(p => p.class.toLowerCase());
+        
+        if (objects.some(obj => ["pothole", "hole", "crack"].includes(obj))) {
+            return "potholes";
+        }
+        
+        if (objects.some(obj => ["trash", "bottle", "can", "garbage", "waste"].includes(obj))) {
+            return "garbage";
+        }
+        
+        if (objects.some(obj => ["water", "puddle", "leak", "pipe"].includes(obj))) {
+            return "waterleakage";
+        }
+        
+        if (objects.some(obj => ["light", "pole", "street light", "lamp"].includes(obj))) {
+            return "streetlights";
+        }
+        
+        if (objects.some(obj => ["building", "construction", "site"].includes(obj))) {
+            return "construction";
+        }
+        
+        return "other";
+    };
+    
+    // Helper function to generate description based on detected objects
+    const generateDescription = (predictions) => {
+        if (predictions.length === 0) {
+            return "Issue detected in the uploaded image. Please provide additional details.";
+        }
+        
+        // Group similar objects and count them
+        const objectCounts = {};
+        predictions.forEach(p => {
+            const obj = p.class.toLowerCase();
+            objectCounts[obj] = (objectCounts[obj] || 0) + 1;
+        });
+        
+        // Create description based on detected objects
+        let description = "Based on the image analysis, I'm reporting the following issue: ";
+        
+        const objectEntries = Object.entries(objectCounts);
+        objectEntries.forEach(([obj, count], index) => {
+            description += `${count > 1 ? count + ' ' + obj + 's' : 'a ' + obj}`;
+            
+            if (index < objectEntries.length - 2) {
+                description += ", ";
+            } else if (index === objectEntries.length - 2) {
+                description += " and ";
+            }
+        });
+        
+        // Add context based on detected complaint type
+        const complaintType = determineComplaintType(predictions);
+        
+        switch (complaintType) {
+            case "potholes":
+                description += ". This appears to be a road damage issue that needs repair.";
+                break;
+            case "garbage":
+                description += ". This is an issue with improper waste disposal or missed garbage collection.";
+                break;
+            case "waterleakage":
+                description += ". This appears to be a water leakage or flooding issue.";
+                break;
+            case "streetlights":
+                description += ". This appears to be an issue with street lighting.";
+                break;
+            case "construction":
+                description += ". This appears to be related to construction or building issues.";
+                break;
+            default:
+                description += ". Please address this issue.";
+        }
+        
+        return description;
+    };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
             setImages(e.target.files)
+            
+            // Analyze the first image
+            const firstFile = e.target.files[0];
+            await detectObjectsInImage(firstFile);
         }
     }
 
     const handleUseGPS = () => {
         setUseGPS(true)
-        // In a real implementation, this would use the browser's geolocation API
-        setTimeout(() => {
-            handleChange("location", "123 Main Street, City, State")
-            setUseGPS(false)
-        }, 1000)
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    handleChange("location", `Lat: ${latitude}, Long: ${longitude}`);
+                    setUseGPS(false);
+                },
+                (error) => {
+                    console.error("Error getting location:", error);
+                    toast.error("Failed to get location", {
+                        description: "Please enter location manually."
+                    });
+                    setUseGPS(false);
+                }
+            );
+        } else {
+            // Fallback for demo purposes
+            setTimeout(() => {
+                handleChange("location", "123 Main Street, City, State")
+                setUseGPS(false)
+            }, 1000)
+        }
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -114,7 +275,7 @@ const CreateComplaints = () => {
             // Add anonymous flag
             formData.append('isAnonymous', isAnonymous.toString())
 
-            // Add user ID from Clerk - THIS IS THE NEW CODE
+            // Add user ID from Clerk
             if (user) {
                 formData.append('userId', user.id);
             }
@@ -142,23 +303,6 @@ const CreateComplaints = () => {
             toast.success("Complaint submitted successfully!", {
                 description: "Your complaint has been logged and is being processed."
             })
-
-            // Optional: Reset form or redirect
-            // setTimeout(() => {
-            //     setComplaintData({
-            //         type: "",
-            //         location: "",
-            //         description: "",
-            //         urgencyLevel: "medium",
-            //         name: "",
-            //         email: "",
-            //         phone: "",
-            //         expectedResolution: "3-5 days"
-            //     })
-            //     setImages(null)
-            //     setIsAnonymous(false)
-            //     // Or redirect: navigate("/dashboard")
-            // }, 3000)
 
         } catch (error: any) {
             console.error("Error submitting complaint:", error)
@@ -253,7 +397,7 @@ const CreateComplaints = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="upload-photos">Upload Photos</Label>
+                                        <Label htmlFor="upload-photos">Upload Photos {isAnalyzing && <span className="ml-2 text-xs text-blue-600">(Analyzing images...)</span>}</Label>
                                         <div className="grid grid-cols-1 gap-4">
                                             <div className="flex items-center justify-center w-full">
                                                 <label
@@ -261,13 +405,22 @@ const CreateComplaints = () => {
                                                     className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50"
                                                 >
                                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                        <CameraIcon className="w-8 h-8 mb-3 text-muted-foreground" />
+                                                        {isAnalyzing ? (
+                                                            <LoaderIcon className="w-8 h-8 mb-3 text-blue-500 animate-spin" />
+                                                        ) : (
+                                                            <CameraIcon className="w-8 h-8 mb-3 text-muted-foreground" />
+                                                        )}
                                                         <p className="mb-2 text-sm text-muted-foreground">
                                                             <span className="font-semibold">Click to upload</span> or drag and drop
                                                         </p>
                                                         <p className="text-xs text-muted-foreground">
                                                             PNG, JPG or WEBP (MAX. 5MB)
                                                         </p>
+                                                        {isAnalyzing && (
+                                                            <p className="text-xs text-blue-600 mt-1">
+                                                                AI analyzing image to detect issues...
+                                                            </p>
+                                                        )}
                                                     </div>
                                                     <Input
                                                         id="upload-photos"
@@ -276,6 +429,7 @@ const CreateComplaints = () => {
                                                         multiple
                                                         className="hidden"
                                                         onChange={handleFileChange}
+                                                        disabled={isAnalyzing}
                                                     />
                                                 </label>
                                             </div>
@@ -375,7 +529,6 @@ const CreateComplaints = () => {
                                                     <Label htmlFor="email">Email</Label>
                                                     <Input
                                                         disabled={userData ? true : false}
-
                                                         id="email"
                                                         type="email"
                                                         placeholder="john@example.com"

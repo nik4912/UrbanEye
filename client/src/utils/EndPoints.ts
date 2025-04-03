@@ -15,3 +15,6 @@ export const addComment = async (complaintId: string, text: string) => {
 export const deleteComment = async (complaintId: string, commentId: string) => {
   return apiClient.delete(`/api/complaint/${complaintId}/comment/${commentId}`);
 };
+
+
+
