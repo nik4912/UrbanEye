@@ -81,7 +81,43 @@ const CreateComplaints = () => {
         })
     }
 
+   // At the top along with your other state hooks:
+const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+// NEW: Function to call the CLIP Flask API and append result to description
+const handleAnalyzeImageClip = async () => {
+    if (!images || images.length === 0) {
+        toast.error("No image uploaded for analysis!");
+        return;
+    }
+    setIsAnalyzing(true);
+    try {
+        const file = images[0]; // Use the first uploaded image
+        const formData = new FormData();
+        formData.append("image", file);
+
+        // Call the Flask API on localhost:6000
+        const response = await apiClient.post("http://localhost:6000/api/detect-image/", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        if (response.data && response.data.scenario) {
+            // Append the detected scenario to the description field without overwriting existing text
+            setComplaintData(prev => ({
+                ...prev,
+                description: prev.description + (prev.description ? "\n" : "") + " Detected: " + response.data.scenario,
+            }));
+            toast.success("Image analyzed successfully!");
+        } else {
+            toast.error("No prediction returned!");
+        }
+    } catch (err) {
+        console.error(err);
+        toast.error("Analysis failed!");
+    } finally {
+        setIsAnalyzing(false);
+    }
+};
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             setImages(e.target.files)
@@ -251,48 +287,50 @@ const CreateComplaints = () => {
                                             </SelectContent>
                                         </Select>
                                     </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="upload-photos">Upload Photos</Label>
-                                        <div className="grid grid-cols-1 gap-4">
-                                            <div className="flex items-center justify-center w-full">
-                                                <label
-                                                    htmlFor="upload-photos"
-                                                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50"
-                                                >
-                                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                        <CameraIcon className="w-8 h-8 mb-3 text-muted-foreground" />
-                                                        <p className="mb-2 text-sm text-muted-foreground">
-                                                            <span className="font-semibold">Click to upload</span> or drag and drop
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            PNG, JPG or WEBP (MAX. 5MB)
-                                                        </p>
-                                                    </div>
-                                                    <Input
-                                                        id="upload-photos"
-                                                        type="file"
-                                                        accept="image/*"
-                                                        multiple
-                                                        className="hidden"
-                                                        onChange={handleFileChange}
-                                                    />
-                                                </label>
-                                            </div>
-                                            {images && Array.from(images).length > 0 && (
-                                                <div className="flex flex-wrap gap-2">
-                                                    {Array.from(images).map((file, index) => (
-                                                        <div key={index} className="relative group">
-                                                            <div className="w-16 h-16 overflow-hidden rounded-md bg-muted">
-                                                                <ImageIcon className="w-full h-full p-2 text-muted-foreground" />
-                                                            </div>
-                                                            <Badge className="absolute -top-2 -right-2 px-1.5">{index + 1}</Badge>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                     <div className="space-y-2">
+                                 <Label htmlFor="upload-photos">Upload Photos</Label>
+    <div className="grid grid-cols-1 gap-4">
+        <Button variant="outline" type="button" onClick={handleAnalyzeImageClip} disabled={!images || isAnalyzing}>
+            {isAnalyzing ? "Analyzing..." : "Analyze Image"}
+        </Button>
+        <div className="flex items-center justify-center w-full">
+            <label
+                htmlFor="upload-photos"
+                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50"
+            >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <CameraIcon className="w-8 h-8 mb-3 text-muted-foreground" />
+                    <p className="mb-2 text-sm text-muted-foreground">
+                        <span className="font-semibold">Click to upload</span> or drag and drop
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                        PNG, JPG or WEBP (MAX. 5MB)
+                    </p>
+                </div>
+                <Input
+                    id="upload-photos"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleFileChange}
+                />
+            </label>
+        </div>
+        {images && Array.from(images).length > 0 && (
+            <div className="flex flex-wrap gap-2">
+                {Array.from(images).map((file, index) => (
+                    <div key={index} className="relative group">
+                        <div className="w-16 h-16 overflow-hidden rounded-md bg-muted">
+                            <ImageIcon className="w-full h-full p-2 text-muted-foreground" />
+                        </div>
+                        <Badge className="absolute -top-2 -right-2 px-1.5">{index + 1}</Badge>
+                    </div>
+                ))}
+            </div>
+        )}
+    </div>
+</div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="location">Location</Label>
